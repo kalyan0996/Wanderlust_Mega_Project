@@ -1,22 +1,34 @@
 #!/bin/bash
 
-# Get public IP automatically - no hardcoding needed
-ipv4_address=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+# Try multiple methods to get IP
+ipv4_address=$(curl -s ifconfig.me)
 
-# File path  ← DIFFERENT from backend
+# Backup method if above fails
+if [ -z "$ipv4_address" ]; then
+    ipv4_address=$(curl -s checkip.amazonaws.com)
+fi
+
+# Show what we got
+echo "Got IP: $ipv4_address"
+
+# Fail if still empty
+if [ -z "$ipv4_address" ]; then
+    echo "ERROR: Could not get IP address"
+    exit 1
+fi
+
+# File path
 file_to_find="../frontend/.env.docker"
 alreadyUpdate=$(cat ../frontend/.env.docker)
 
-# Colors for output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m'
 
-# Show the IP we found
 echo -e " ${GREEN}System Public Ipv4 address ${NC} : ${ipv4_address}"
 
-# Check if already updated
 if [[ "${alreadyUpdate}" == "VITE_API_PATH=\"http://${ipv4_address}:31100\"" ]]
 then
     echo -e "${YELLOW}Already updated - skipping${NC}"
