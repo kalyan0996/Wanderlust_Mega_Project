@@ -1,33 +1,34 @@
 #!/bin/bash
 
-# Set the Instance ID and path to the .env file
-INSTANCE_ID="i-047ba7043a37d3b72"
+# Get public IP automatically - no hardcoding needed
+ipv4_address=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 
-# Retrieve the public IP address of the specified EC2 instance
-ipv4_address=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
-
-# Initializing variables
+# File path
 file_to_find="../frontend/.env.docker"
 alreadyUpdate=$(cat ../frontend/.env.docker)
+
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m'
 
+# Show the IP we found
 echo -e " ${GREEN}System Public Ipv4 address ${NC} : ${ipv4_address}"
 
+# Check if already updated
 if [[ "${alreadyUpdate}" == "VITE_API_PATH=\"http://${ipv4_address}:31100\"" ]]
 then
-        echo -e "${YELLOW}${file_to_find} file is already updated to the current host's Ipv4 ${NC}"
+    echo -e "${YELLOW}Already updated - skipping${NC}"
 else
-        if [ -f ${file_to_find} ]
-        then
-                echo -e "${GREEN}${file_to_find}${NC} found.."
-                echo -e "${YELLOW}Configuring env variables in ${NC} ${file_to_find}"
-                sleep 7s;
-                sed -i -e "s|VITE_API_PATH.*|VITE_API_PATH=\"http://${ipv4_address}:31100\"|g" ${file_to_find}
-                echo -e "${GREEN}env variables configured..${NC}"
-        else
-                echo -e "${RED}ERROR : File not found..${NC}"
-        fi
+    if [ -f ${file_to_find} ]
+    then
+        echo -e "${GREEN}File found - updating...${NC}"
+        sleep 2s
+        sed -i -e "s|VITE_API_PATH.*|VITE_API_PATH=\"http://${ipv4_address}:31100\"|g" ${file_to_find}
+        echo -e "${GREEN}Done!${NC}"
+    else
+        echo -e "${RED}ERROR: File not found at ${file_to_find}${NC}"
+        exit 1
+    fi
 fi
