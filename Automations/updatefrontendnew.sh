@@ -3,7 +3,7 @@
 # Get public IP automatically - no hardcoding needed
 ipv4_address=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 
-# File path
+# File path  ← DIFFERENT from backend
 file_to_find="../frontend/.env.docker"
 alreadyUpdate=$(cat ../frontend/.env.docker)
 
